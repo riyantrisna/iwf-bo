@@ -1086,7 +1086,7 @@ a:focus {
 
 .breadcrumb {
   background-color: transparent;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700
 }
 
@@ -1917,4 +1917,8 @@ body.sidebar-toggled footer.sticky-footer {
   color: #fff;
   background-color: #3f51b5;
   border-color: #3f51b5
+}
+
+.detail-value{
+    border: #C5C7D1 1px dashed; padding: 5px;
 }

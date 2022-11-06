@@ -1,6 +1,8 @@
 @extends('layouts.main')
 @section('container')
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-</div>
+
+<script src="{{asset('/assets/vendor/jquery/jquery.min.js')}}"></script>
+<script src="{{asset('/assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+<script src="{{asset('/assets/vendor/jquery-easing/jquery.easing.min.js')}}"></script>
+<script src="{{asset('/assets/js/ruang-admin.min.js')}}"></script>
 @endsection

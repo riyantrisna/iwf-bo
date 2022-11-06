@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -27,6 +28,10 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
+            $user = User::where('email', $request->email)->first();
+            $user->last_login = date('Y-m-d H:i:s');
+            $user->save();
 
             return redirect()->intended('dashboard');
         }
