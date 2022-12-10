@@ -32,6 +32,8 @@ Route::post('/logout', [LoginController::class, 'logout']);
 Route::middleware(['admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/get-region-by-provinces/{id}', [RegionsController::class, 'getRegionsByProvincesId']);
+    Route::get('/get-occupation-type/{key}', [UserController::class, 'getOccupationType']);
+
 
     Route::prefix('user')->group(function(){
         Route::get('/', [UserController::class, 'index']);
@@ -42,6 +44,7 @@ Route::middleware(['admin'])->group(function () {
         Route::post('/edit', [UserController::class, 'edit']);
         Route::get('/detail/{id}', [UserController::class, 'detail']);
         Route::get('/delete/{id}', [UserController::class, 'delete']);
+        Route::get('/export', [UserController::class, 'userExport']);
     });
 });
 

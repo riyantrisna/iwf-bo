@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link href="{{asset('/assets/img/logo/logo.png')}}" rel="icon">
+    <link href="{{asset('/assets/img/logo/favicon.ico')}}" rel="icon">
     <title>IWF Admin | {{ $title }}</title>
     <link href="{{asset('/assets/vendor/fontawesome-free/css/all.min.css')}}" rel="stylesheet" type="text/css">
     <link href="{{asset('/assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css">
@@ -40,7 +40,8 @@
 			<footer class="sticky-footer bg-white">
 			<div class="container my-auto">
 				<div class="copyright text-center my-auto">
-				<span>Copyright &copy; <script> document.write(new Date().getFullYear()); </script>
+				<span>
+                    Indonesia Womens Forum &copy; Prana Group <script> document.write(new Date().getFullYear()); </script>
 				</span>
 				</div>
 			</div>

@@ -11,7 +11,8 @@
     <div class="col-lg-12">
         <div class="card mb-4">
             <div class="table-responsive p-3">
-                <button class="btn btn-success mb-3" onclick="add()"><i class="fas fa-plus mr-2"></i> Add</button>
+                {{-- <button class="btn btn-success mb-3" onclick="add()"><i class="fas fa-plus mr-2"></i> Add</button> --}}
+                <a class="btn btn-success mb-3" href="/user/export" target="_blank"><i class="fas fa-file-excel"></i> Export</a>
                 <table class="table align-items-center table-flush table-hover" id="dataTable">
                     <thead class="thead-light">
                         <tr>
@@ -147,7 +148,8 @@ function reload_table()
 function add()
 {
     save_method = 'add';
-    $('#form_user')[0].reset(); // reset form on modals
+    $('#form_user').html(""); // reset form on modals
+    $('#body_detail').html("");
     $("#box_msg_user").html('').hide();
     $('#btnSave').text('Save');
     $('#btnSave').attr('disabled',false);
@@ -165,10 +167,14 @@ function add()
                     format: 'yyyy-mm-dd',
                     autoclose: true
                 });
-                //image
-                await $('#remove_file').hide();
-                await $('#selector_file').show();
-                await $('#file_photo_show').hide();
+                var id = $('#provinces').val();
+                if(id != ""){
+                    await relod_regions('provinces');
+                }
+
+                await hide_other(data.iwf_events, true)
+
+                await show_occupation()
             }else{
                 toastr.error(xhr.statusText);
             }
@@ -180,7 +186,8 @@ function add()
 function edit(id)
 {
     save_method = 'edit';
-    $('#form_user')[0].reset(); // reset form on modals
+    $('#form_user').html(""); // reset form on modals
+    $('#body_detail').html("");
     $("#box_msg_user").html('').hide();
     $('#btnSave').text('Save');
     $('#btnSave').attr('disabled',false);
@@ -198,6 +205,16 @@ function edit(id)
                     format: 'yyyy-mm-dd',
                     autoclose: true
                 });
+
+                var id = $('#provinces').val();
+                if(id != ""){
+                    await relod_regions('provinces', data.detail);
+                }
+
+                await hide_other(data.iwf_events, true)
+
+                await show_occupation_edit(data.detail)
+
             }else{
                 toastr.error(xhr.statusText);
             }
@@ -256,15 +273,17 @@ function save()
 function detail(id)
 {
     $('#title_detail').text('Detail {{ $title }}'); // Set Title to Bootstrap modal title
+    $('#form_user').html("");
 
     $.ajax({
         url : "{{ url('/user/detail') }}/" + id,
         type: "GET",
         dataType: "JSON",
-        success: function(data, textStatus, xhr)
+        success: async function(data, textStatus, xhr)
         {
             if(xhr.status == '200'){
                 $('#body_detail').html(data.html);
+                await show_occupation_detail(data.detail)
             }else{
                 toastr.error(xhr.statusText);
             }
@@ -309,7 +328,7 @@ function process_delete(id)
     });
 }
 
-function relod_regions(elm){
+function relod_regions(elm, detail = ""){
     var id = $('#'+elm).val();
 
     if(id == ""){
@@ -323,10 +342,15 @@ function relod_regions(elm){
         success: function(data, textStatus, xhr)
         {
             if(xhr.status == '200'){
-                var str = '<option value="">-- Select --</option>';
+                var str = '<option value="">-- Pilih --</option>';
                 if(data.length > 0){
                     data.forEach(function(item, index){
-                        str += '<option value="'+item.id+'">'+item.name+'</option>';
+                        if(item.id == detail.region_id){
+                            selected = "selected";
+                        }else{
+                            selected = "";
+                        }
+                        str += '<option value="'+item.id+'" '+selected+'>'+item.name+'</option>';
                     });
                 }
                 $('#regions').html(str);
@@ -334,6 +358,176 @@ function relod_regions(elm){
 
         }
     });
+}
+
+function show_occupation(){
+    var val = $("#occupation").val()
+
+    if(val != ""){
+        key = val.toLowerCase();
+        key = key.replaceAll(" ", "_");
+
+        $.ajax({
+            url : "{{ url('/get-occupation-type') }}/" + key,
+            type: "GET",
+            dataType: "JSON",
+            success: function(data, textStatus, xhr)
+            {
+                if(xhr.status == '200'){
+
+                    if(data.result.length > 0){
+                        var str = '<div class="form-group"><label for="occupation_type_title">'+data.occupation_type_lable[0]+'</label><input class="form-control" type="text" id="occupation_type_title" name="occupation_type_title"></div>';
+                        $('#occupation_type_title_cover').html(str).show();
+
+                        var str = '<div class="form-group"><label for="occupation_type">'+data.occupation_type_lable[1]+'</label><select name="occupation_type" class="form-control">';
+                        str += '<option value="">-- Pilih --</option>';
+                        if(data.result.length > 0){
+                            data.result.forEach(function(item, index){
+                                str += '<option value="'+item+'">'+item+'</option>';
+                            });
+                        }
+                        str += '</select><div>';
+                        $('#occupation_type_cover').html(str).show();
+                    }else{
+                        $('#occupation_type_title_cover').hide();
+                        $('#occupation_type_cover').hide();
+                    }
+                }
+
+            }
+        });
+    }
+}
+
+function show_occupation_edit(detail){
+    var val = $("#occupation").val()
+
+    if(val != ""){
+        key = val.toLowerCase();
+        key = key.replaceAll(" ", "_");
+
+        $.ajax({
+            url : "{{ url('/get-occupation-type') }}/" + key,
+            type: "GET",
+            dataType: "JSON",
+            success: function(data, textStatus, xhr)
+            {
+                if(xhr.status == '200'){
+
+                    if(data.result.length > 0){
+                        var str = '<div class="form-group"><label for="occupation_type_title">'+data.occupation_type_lable[0]+'</label><input class="form-control" type="text" id="occupation_type_title" name="occupation_type_title" value="'+detail.occupation_company_name+'"></div>';
+                        $('#occupation_type_title_cover').html(str).show();
+
+                        var str = '<div class="form-group"><label for="occupation_type">'+data.occupation_type_lable[1]+'</label><select name="occupation_type" class="form-control">';
+                        str += '<option value="">-- Pilih --</option>';
+                        if(data.result.length > 0){
+                            data.result.forEach(function(item, index){
+                                if(item == detail.occupation_company_detail){
+                                    selected = "selected";
+                                }else{
+                                    selected = "";
+                                }
+                                str += '<option value="'+item+'" '+selected+'>'+item+'</option>';
+                            });
+                        }
+                        str += '</select><div>';
+                        $('#occupation_type_cover').html(str).show();
+                    }else{
+                        $('#occupation_type_title_cover').hide();
+                        $('#occupation_type_cover').hide();
+                    }
+                }
+
+            }
+        });
+    }
+}
+
+function show_occupation_edit_val(occupation_company_name, occupation_company_detail){
+    var val = $("#occupation").val()
+
+    if(val != ""){
+        key = val.toLowerCase();
+        key = key.replaceAll(" ", "_");
+
+        $.ajax({
+            url : "{{ url('/get-occupation-type') }}/" + key,
+            type: "GET",
+            dataType: "JSON",
+            success: function(data, textStatus, xhr)
+            {
+                if(xhr.status == '200'){
+
+                    if(data.result.length > 0){
+                        var str = '<div class="form-group"><label for="occupation_type_title">'+data.occupation_type_lable[0]+'</label><input class="form-control" type="text" id="occupation_type_title" name="occupation_type_title" value="'+occupation_company_name+'"></div>';
+                        $('#occupation_type_title_cover').html(str).show();
+
+                        var str = '<div class="form-group"><label for="occupation_type">'+data.occupation_type_lable[1]+'</label><select name="occupation_type" class="form-control">';
+                        str += '<option value="">-- Pilih --</option>';
+                        if(data.result.length > 0){
+                            data.result.forEach(function(item, index){
+                                if(item == occupation_company_detail){
+                                    selected = "selected";
+                                }else{
+                                    selected = "";
+                                }
+                                str += '<option value="'+item+'" '+selected+'>'+item+'</option>';
+                            });
+                        }
+                        str += '</select><div>';
+                        $('#occupation_type_cover').html(str).show();
+                    }else{
+                        $('#occupation_type_title_cover').hide();
+                        $('#occupation_type_cover').hide();
+                    }
+                }
+
+            }
+        });
+    }
+}
+
+function show_occupation_detail(detail){
+    var val = detail.occupation
+
+    if(val != ""){
+        key = val.toLowerCase();
+        key = key.replaceAll(" ", "_");
+
+        $.ajax({
+            url : "{{ url('/get-occupation-type') }}/" + key,
+            type: "GET",
+            dataType: "JSON",
+            success: function(data, textStatus, xhr)
+            {
+                if(xhr.status == '200'){
+
+                    if(data.result.length > 0){
+                        var str = '<label for="occupation_type_title">'+data.occupation_type_lable[0]+'</label><div class="detail-value" id="occupation_type_title">'+detail.occupation_company_name+'</div>';
+                        $('#occupation_type_title_cover').html(str).show();
+
+                        var str = '<label for="occupation_type">'+data.occupation_type_lable[1]+'</label><div class="detail-value" id="occupation_type_title">'+detail.occupation_company_detail+'</div>';
+                        $('#occupation_type_cover').html(str).show();
+                    }else{
+                        $('#occupation_type_title_cover').hide();
+                        $('#occupation_type_cover').hide();
+                    }
+                }
+
+            }
+        });
+    }
+}
+
+function hide_other(elm_id, is_validation = false){
+    if($("#participated"+elm_id).is(":checked")){
+        $(".checkboxes").attr("disabled", true).prop('checked', false);
+        $("#participated"+elm_id).removeAttr("disabled").prop('checked', true);
+    }else{
+        if(!is_validation){
+            $(".checkboxes").removeAttr("disabled").prop('checked', false);
+        }
+    }
 }
 </script>
 @endsection

@@ -22,14 +22,30 @@ class LoginController extends Controller
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email:dns'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
+        $user = User::where('email', $request->email)->first();
+
+        if(empty($user->account_verified_date)){
+            return back()->with([
+                'loginError'=> 'Akun belum diverifikasi',
+                'email'=> $request->email,
+            ]);
+        }
+
+        if($user->is_blocked == 1 && in_array($user->roles, array('ADMIN', 'MODERATOR'))){
+            return back()->with([
+                'loginError'=> 'Login Gagal',
+                'email'=> $request->email,
+            ]);
+        }
+
         if (Auth::attempt($credentials)) {
+
             $request->session()->regenerate();
 
-            $user = User::where('email', $request->email)->first();
             $user->last_login = date('Y-m-d H:i:s');
             $user->save();
 
