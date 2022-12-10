@@ -974,6 +974,10 @@ class UserController extends Controller
 
     public function userExport(Request $request){
 
+        $user_id = auth()->user()->id;
+
+        @unlink(redirect('User_'.$user_id.'.xlsx'));
+
         $styleBorder = [
             'borders' => [
                 'allBorders' => [
@@ -1067,14 +1071,18 @@ class UserController extends Controller
                 }
                 $sheet->setCellValue('F'.$row, $value->occupation.$occupation_str);
                 $sheet->setCellValue('G'.$row, $value->address);
-                $sheet->setCellValue('H'.$row, $value->provinces_name);
-                $sheet->setCellValue('I'.$row, $value->regions_name);
+                $value->provinces_name = str_replace("\n", "", $value->provinces_name);
+                $value->provinces_name = str_replace("\r", "", $value->provinces_name);
+                $sheet->setCellValue('H'.$row, !empty($value->provinces_name) ? ucwords(strtolower($value->provinces_name)) : "");
+                $value->regions_name = str_replace("\n", "", $value->regions_name);
+                $value->regions_name = str_replace("\r", "", $value->regions_name);
+                $sheet->setCellValue('I'.$row, !empty($value->regions_name) ? ucwords(strtolower($value->regions_name)) : "");
                 $sheet->setCellValue('J'.$row, $value->postal_code);
                 $sheet->setCellValue('K'.$row, " ".str_replace(';',', ',$value->previous_participations));
                 $sheet->setCellValue('L'.$row, $value->facebook);
                 $sheet->setCellValue('M'.$row, $value->instagram);
                 $sheet->setCellValue('N'.$row, $value->linkedin);
-                $sheet->setCellValue('O'.$row, !empty($value->roles) ? ucfirst(strtolower($value->roles)) : "");
+                $sheet->setCellValue('O'.$row, !empty($value->roles) ? ucwords(strtolower($value->roles)) : "");
                 $sheet->setCellValue('P'.$row, !empty($value->account_verified_date) ? "Yes" : "No");
                 $sheet->setCellValue('Q'.$row, $value->is_blocked == 1 ? "Yes" : "No");
                 $no++;
@@ -1086,10 +1094,9 @@ class UserController extends Controller
 
         $writer = new Xlsx($spreadsheet);
         $date_now = date('YmdHis');
-        $writer->save('User_'.$date_now.'.xlsx');
+        $writer->save('User_'.$user_id.'.xlsx');
 
-        return redirect('User_'.$date_now.'.xlsx');
-
+        return redirect('User_'.$user_id.'.xlsx');
 
     }
 }
