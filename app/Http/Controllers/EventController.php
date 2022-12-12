@@ -905,11 +905,11 @@ class EventController extends Controller
         }
 
         $data_speaker_text = "";
-        if(!empty($detail->sponsors)){
-            $speaker_data = EventSpeaker::selectRaw('GROUP_CONCAT(s.full_name) AS name')
-                            ->leftJoin('speakers AS s', 's.id', 'event_speaker.speaker_id')
-                            ->where('event_id', $id)
-                            ->first();
+        $speaker_data = EventSpeaker::selectRaw('GROUP_CONCAT(s.full_name) AS name')
+                        ->leftJoin('speakers AS s', 's.id', 'event_speaker.speaker_id')
+                        ->where('event_id', $id)
+                        ->first();
+        if(!empty($speaker_data)){
             $data_speaker_text = !empty($speaker_data->name) ? str_replace(",",", ",$speaker_data->name) : "";
         }
 
@@ -1019,11 +1019,11 @@ class EventController extends Controller
 
     }
 
-    public function userExport(Request $request){
+    public function eventExport(Request $request){
 
         $user_id = auth()->user()->id;
 
-        @unlink(redirect('User_'.$user_id.'.xlsx'));
+        @unlink(redirect('Event_'.$user_id.'.xlsx'));
 
         $styleBorder = [
             'borders' => [
@@ -1055,7 +1055,7 @@ class EventController extends Controller
 
         // sheet 1
         $spreadsheet->setActiveSheetIndex(0);
-        $sheet = $spreadsheet->getActiveSheet()->setTitle('Data User');
+        $sheet = $spreadsheet->getActiveSheet()->setTitle('Data Acara');
 
         // style auto width column
         $sheet->getColumnDimension('A')->setAutoSize(true);
@@ -1073,77 +1073,78 @@ class EventController extends Controller
         $sheet->getColumnDimension('M')->setAutoSize(true);
         $sheet->getColumnDimension('N')->setAutoSize(true);
         $sheet->getColumnDimension('O')->setAutoSize(true);
-        $sheet->getColumnDimension('P')->setAutoSize(true);
-        $sheet->getColumnDimension('Q')->setAutoSize(true);
 
         $sheet->setCellValue('A1', 'No');
         $sheet->setCellValue('B1', 'Nama');
-        $sheet->setCellValue('C1', 'Email');
-        $sheet->setCellValue('D1', 'Nomer Telepon');
-        $sheet->setCellValue('E1', 'Tanggal Lahir');
-        $sheet->setCellValue('F1', 'Pekerjaan Utama');
-        $sheet->setCellValue('G1', 'Alamat');
-        $sheet->setCellValue('H1', 'Provinsi');
-        $sheet->setCellValue('I1', 'Kota / Kabupaten');
-        $sheet->setCellValue('J1', 'Kode Pos');
-        $sheet->setCellValue('K1', 'Kegiatan IWF');
-        $sheet->setCellValue('L1', 'Facebook');
-        $sheet->setCellValue('M1', 'Instagram');
-        $sheet->setCellValue('N1', 'Linkedin');
-        $sheet->setCellValue('O1', 'Peran');
-        $sheet->setCellValue('P1', 'Diverifikasi?');
-        $sheet->setCellValue('Q1', 'Diblok?');
-        $sheet->getStyle('A1:Q1')->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('A1:Q1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:Q1')->applyFromArray($styleHeader);
+        $sheet->setCellValue('C1', 'Kategori');
+        $sheet->setCellValue('D1', 'Periode');
+        $sheet->setCellValue('E1', 'Mode');
+        $sheet->setCellValue('F1', 'Kelompok');
+        $sheet->setCellValue('G1', 'Status');
+        $sheet->setCellValue('H1', 'Tanggal Mulai');
+        $sheet->setCellValue('I1', 'Tanggal Selesai');
+        $sheet->setCellValue('J1', 'Lokasi');
+        $sheet->setCellValue('K1', 'Kuota');
+        $sheet->setCellValue('L1', 'Harga');
+        $sheet->setCellValue('M1', 'Sponsor');
+        $sheet->setCellValue('N1', 'Pembicara');
+        $sheet->setCellValue('O1', 'Link Pertemuan Online');
+        $sheet->getStyle('A1:O1')->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A1:O1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:O1')->applyFromArray($styleHeader);
 
-        $data = User::select('users.*', 'provinces.name AS provinces_name', 'regions.name AS regions_name')
-        ->leftJoin('provinces', 'provinces.id', '=', 'users.province_id')
-        ->leftJoin('regions', 'regions.id', '=', 'users.region_id')
-        ->get();
+        $data = Event::select('events.*', 'eg.*', 'g.id AS group_id', 'g.group_name')
+                ->leftJoin('event_group AS eg', 'eg.event_id', 'events.id')
+                ->leftJoin('groups AS g', 'g.id', 'eg.group_id')
+                ->get();
 
         $row = $row_data = 2;
         $no = 1;
         if(!empty($data)){
             foreach ($data as $key => $value) {
-                $sheet->setCellValue('A'.$row, $no)->getStyle('A'.$row)->getAlignment()->setHorizontal('center');
-                $sheet->setCellValue('B'.$row, $value->full_name);
-                $sheet->setCellValue('C'.$row, $value->email);
-                $sheet->setCellValue('D'.$row, $value->phone_number);
-                $sheet->setCellValue('E'.$row, $value->birthday);
-                if(!empty($value->occupation_company_name) && !empty($value->occupation_company_detail)){
-                    $occupation_str = " (".$value->occupation_company_name.", ".$value->occupation_company_detail.")";
-                }else{
-                    $occupation_str = "";
+                $data_sponsors_text = "";
+                if(!empty($value->sponsors)){
+                    $data_spomsors_exist = explode(',',$value->sponsors);
+                    $data_sponsors = Sponsor::selectRaw('GROUP_CONCAT(full_name) AS name')->whereIn('id', $data_spomsors_exist)->first();
+                    $data_sponsors_text = !empty($data_sponsors->name) ? str_replace(",",", ",$data_sponsors->name) : "";
                 }
-                $sheet->setCellValue('F'.$row, $value->occupation.$occupation_str);
-                $sheet->setCellValue('G'.$row, $value->address);
-                $value->provinces_name = str_replace("\n", "", $value->provinces_name);
-                $value->provinces_name = str_replace("\r", "", $value->provinces_name);
-                $sheet->setCellValue('H'.$row, !empty($value->provinces_name) ? ucwords(strtolower($value->provinces_name)) : "");
-                $value->regions_name = str_replace("\n", "", $value->regions_name);
-                $value->regions_name = str_replace("\r", "", $value->regions_name);
-                $sheet->setCellValue('I'.$row, !empty($value->regions_name) ? ucwords(strtolower($value->regions_name)) : "");
-                $sheet->setCellValue('J'.$row, $value->postal_code);
-                $sheet->setCellValue('K'.$row, " ".str_replace(';',', ',$value->previous_participations));
-                $sheet->setCellValue('L'.$row, $value->facebook);
-                $sheet->setCellValue('M'.$row, $value->instagram);
-                $sheet->setCellValue('N'.$row, $value->linkedin);
-                $sheet->setCellValue('O'.$row, !empty($value->roles) ? ucwords(strtolower($value->roles)) : "");
-                $sheet->setCellValue('P'.$row, !empty($value->account_verified_date) ? "Yes" : "No");
-                $sheet->setCellValue('Q'.$row, $value->is_blocked == 1 ? "Yes" : "No");
+
+                $data_speaker_text = "";
+                $speaker_data = EventSpeaker::selectRaw('GROUP_CONCAT(s.full_name) AS name')
+                                ->leftJoin('speakers AS s', 's.id', 'event_speaker.speaker_id')
+                                ->where('event_id', $value->id)
+                                ->first();
+                if(!empty($speaker_data)){
+                    $data_speaker_text = !empty($speaker_data->name) ? str_replace(",",", ",$speaker_data->name) : "";
+                }
+
+                $sheet->setCellValue('A'.$row, $no)->getStyle('A'.$row)->getAlignment()->setHorizontal('center');
+                $sheet->setCellValue('B'.$row, $value->name);
+                $sheet->setCellValue('C'.$row, (ucwords(strtolower($value->category))));
+                $sheet->setCellValue('D'.$row, $value->period_code);
+                $sheet->setCellValue('E'.$row, (ucwords(strtolower($value->mode))));
+                $sheet->setCellValue('F'.$row, $value->group_name);
+                $sheet->setCellValue('G'.$row, ($value->is_active == "1" ? "Aktif" : "Tidak Aktif"));
+                $sheet->setCellValue('H'.$row, (!empty($value->startdate) ? substr($value->startdate, 0, -3) : ""));
+                $sheet->setCellValue('I'.$row, (!empty($value->enddate) ? substr($value->enddate, 0, -3) : ""));
+                $sheet->setCellValue('J'.$row, $value->location);
+                $sheet->setCellValue('K'.$row, (!empty($value->quota) ? number_format($value->quota, 0, ",", ".") : ""));
+                $sheet->setCellValue('L'.$row, (!empty($value->prices) ? number_format($value->prices, 0, ",", ".") : ""));
+                $sheet->setCellValue('M'.$row, $data_sponsors_text);
+                $sheet->setCellValue('N'.$row, $data_speaker_text);
+                $sheet->setCellValue('O'.$row, $value->video_meeting_link);
                 $no++;
                 $row++;
             }
         }
 
-        $sheet->getStyle('A'.$row_data.':Q'.($row-1))->applyFromArray($styleBorder);
+        $sheet->getStyle('A'.$row_data.':O'.($row-1))->applyFromArray($styleBorder);
 
         $writer = new Xlsx($spreadsheet);
         $date_now = date('YmdHis');
-        $writer->save('User_'.$user_id.'.xlsx');
+        $writer->save('Event_'.$user_id.'.xlsx');
 
-        return redirect('User_'.$user_id.'.xlsx');
+        return redirect('Event_'.$user_id.'.xlsx');
 
     }
 }

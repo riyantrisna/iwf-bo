@@ -12,7 +12,7 @@
         <div class="card mb-4">
             <div class="table-responsive p-3">
                 <button class="btn btn-success mb-3" onclick="add()"><i class="fas fa-plus mr-2"></i> Add</button>
-                <a class="btn btn-success mb-3" href="/user/export" target="_blank"><i class="fas fa-file-excel"></i> Export</a>
+                <a class="btn btn-success mb-3" href="/event/export" target="_blank"><i class="fas fa-file-excel"></i> Export</a>
                 <table class="table align-items-center table-flush table-hover" id="dataTable">
                     <thead class="thead-light">
                         <tr>

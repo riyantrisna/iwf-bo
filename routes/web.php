@@ -57,7 +57,7 @@ Route::middleware(['admin'])->group(function () {
         Route::post('/edit', [EventController::class, 'edit']);
         Route::get('/detail/{id}', [EventController::class, 'detail']);
         Route::get('/delete/{id}', [EventController::class, 'delete']);
-        Route::get('/export', [EventController::class, 'userExport']);
+        Route::get('/export', [EventController::class, 'eventExport']);
     });
 });
 
