@@ -17,12 +17,12 @@
                     <thead class="thead-light">
                         <tr>
                             <th>No</th>
-                            <th>Name</th>
+                            <th>Nama</th>
                             <th>Email</th>
-                            <th>Phone</th>
-                            <th>Roles</th>
-                            <th>Is Blocked?</th>
-                            <th>Action</th>
+                            <th>Nomer Telepon</th>
+                            <th>Peran</th>
+                            <th>Diblok?</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>

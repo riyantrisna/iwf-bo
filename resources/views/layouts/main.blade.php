@@ -17,6 +17,13 @@
     <link href="{{asset('/assets/vendor/bootstrap-datepicker/css/bootstrap-datepicker.min.css')}}" rel="stylesheet" >
     <!-- Toastr -->
     <link rel="stylesheet" href="{{asset('/assets/vendor/toastr/toastr.min.css')}}">
+    <!-- summernote -->
+    <link rel="stylesheet" href="{{asset('/assets/vendor/summernote/summernote-bs4.css')}}">
+    <!-- select2 -->
+    <link rel="stylesheet" href="{{asset('/assets/vendor/select2/dist/css/select2.min.css')}}">
+    <!-- Datetime picker -->
+    {{-- <script src="{{asset('/assets/vendor/moment/moment.min.js')}}"></script> --}}
+    <link rel="stylesheet" href="{{asset('/assets/vendor/datetimepicker/datetimepicker.css')}}">
 </head>
 
 <body id="page-top">

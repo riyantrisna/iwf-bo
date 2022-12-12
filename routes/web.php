@@ -5,6 +5,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RegionsController;
+use App\Http\Controllers\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,18 @@ Route::middleware(['admin'])->group(function () {
         Route::get('/detail/{id}', [UserController::class, 'detail']);
         Route::get('/delete/{id}', [UserController::class, 'delete']);
         Route::get('/export', [UserController::class, 'userExport']);
+    });
+
+    Route::prefix('event')->group(function(){
+        Route::get('/', [EventController::class, 'index']);
+        Route::post('/data', [EventController::class, 'data']);
+        Route::get('/add-view', [EventController::class, 'addView']);
+        Route::post('/add', [EventController::class, 'add']);
+        Route::get('/edit-view/{id}', [EventController::class, 'editView']);
+        Route::post('/edit', [EventController::class, 'edit']);
+        Route::get('/detail/{id}', [EventController::class, 'detail']);
+        Route::get('/delete/{id}', [EventController::class, 'delete']);
+        Route::get('/export', [EventController::class, 'userExport']);
     });
 });
 

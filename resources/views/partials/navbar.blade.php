@@ -30,3 +30,11 @@
  <script src="{{asset('/assets/vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js')}}"></script>
  <!-- Toastr -->
 <script src="{{asset('/assets/vendor/toastr/toastr.min.js')}}"></script>
+<!-- Summernote -->
+<script src="{{asset('/assets/vendor/summernote/summernote-bs4.min.js')}}"></script>
+<!-- select2 -->
+<script src="{{asset('/assets/vendor/select2/dist/js/select2.min.js')}}"></script>
+<!-- InputMask -->
+<script src="{{asset('/assets/vendor/inputmask/jquery.mask.min.js')}}"></script>
+<!-- Datetimepicker -->
+<script src="{{asset('/assets/vendor/datetimepicker/datetimepicker.js')}}"></script>
