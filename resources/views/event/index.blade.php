@@ -174,7 +174,7 @@ $(document).ready(function () {
                 "targets": [ 0,7 ], //last column
                 "orderable": false, //set not orderable
             },
-            { "targets": 7, "width": '120px' },
+            { "targets": 7, "width": '140px' },
             {"targets": 0, "width": '20px'}
         ],
     });
