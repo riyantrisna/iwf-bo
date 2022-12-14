@@ -17,12 +17,12 @@
                     <thead class="thead-light">
                         <tr>
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Nama</th>
                             <th>Email</th>
                             <th>Nomer Telepon</th>
                             <th>Peran</th>
                             <th>Diblok?</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -127,14 +127,14 @@ $(document).ready(function () {
             "type": "POST",
             "dataType": "json",
         },
-        "order": [[ 1, 'asc' ]], //Initial no order.
+        "order": [[ 2, 'asc' ]], //Initial no order.
 
         "columnDefs": [
             {
-                "targets": [ 0,6 ], //last column
+                "targets": [ 0,1 ], //last column
                 "orderable": false, //set not orderable
             },
-            { "targets": 6, "width": '120px' },
+            { "targets": 1, "width": '120px' },
             {"targets": 0, "width": '20px'}
         ],
     });

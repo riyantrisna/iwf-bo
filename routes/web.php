@@ -59,6 +59,7 @@ Route::middleware(['admin'])->group(function () {
         Route::get('/delete/{id}', [EventController::class, 'delete']);
         Route::get('/export', [EventController::class, 'eventExport']);
         Route::get('/event-user-export/{id}', [EventController::class, 'eventUserExport']);
+        Route::get('/all-event-user-export', [EventController::class, 'allEventUserExport']);
     });
 });
 

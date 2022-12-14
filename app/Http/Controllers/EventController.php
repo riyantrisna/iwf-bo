@@ -32,35 +32,40 @@ class EventController extends Controller
         $length = $request->post('length');
 
         $columns = array(
-            1 => 'name',
-            2 => 'category',
-            3 => 'startdate',
-            4 => 'enddate',
-            5 => 'quota',
-            6 => 'is_active'
+            0 => 'events.created_date',
+            2 => 'events.name',
+            3 => 'events.category',
+            4 => 'events.startdate',
+            5 => 'events.enddate',
+            6 => 'events.quota',
+            7 => 'pendaftar',
+            8 => 'is_openeds',
+            9 => 'is_active'
         );
 
         $order = $columns[$request->order[0]['column']];
         $dir = $request->order[0]['dir'];
 
-		$list = Event::select(
-            'id',
-            'name',
-            'category',
-            'startdate',
-            'enddate',
-            'quota',
-            'is_active'
-        );
+		$list = Event::selectRaw('
+            events.id,
+            events.name,
+            events.category,
+            events.startdate,
+            events.enddate,
+            events.quota,
+            events.is_active,
+            (SELECT COUNT(em1.id) FROM event_member AS em1 WHERE em1.event_id = events.id) AS pendaftar,
+            (SELECT COUNT(em2.id) FROM event_member AS em2 WHERE em2.event_id = events.id AND em2.is_opened = 1) AS is_openeds
+        ');
         if(!empty($keyword)){
             $keyword = '%'.$keyword .'%';
             $query = $list->where(function($q) use($keyword) {
-                $q->where('name', 'LIKE', $keyword)
-                ->orWhere('category', 'LIKE', $keyword)
-                ->orWhere('startdate', 'LIKE', $keyword)
-                ->orWhere('enddate', 'LIKE', $keyword)
-                ->orWhere('quota', 'LIKE', $keyword)
-                ->orWhere('is_active', 'LIKE', ($keyword == "%Yes%" ? "%1%" : ($keyword == "%No%" ? "%0%" : "")))
+                $q->where('events.ame', 'LIKE', $keyword)
+                ->orWhere('events.category', 'LIKE', $keyword)
+                ->orWhere('events.startdate', 'LIKE', $keyword)
+                ->orWhere('events.enddate', 'LIKE', $keyword)
+                ->orWhere('events.quota', 'LIKE', $keyword)
+                ->orWhere('events.is_active', 'LIKE', ($keyword == "%Yes%" ? "%1%" : ($keyword == "%No%" ? "%0%" : "")))
                 ;
             });
         }
@@ -81,18 +86,20 @@ class EventController extends Controller
             foreach ($list as $key => $value) {
                 $row = array();
                 $row[] = $no;
+                 //add html for action
+                 $row[] = '<a class="btn btn-sm btn-success" href="/event/event-user-export/'.$value->id.'" target="_blank" title="User Per Acara"><i class="fas fa-file-excel"></i></a>
+                 <a class="btn btn-sm btn-info" href="javascript:void(0)" title="Detail" onclick="detail(\''.$value->id.'\')"><i class="fas fa-search"></i></a>
+                 <a class="btn btn-sm btn-primary" href="javascript:void(0)" title="Edit" onclick="edit('."'".$value->id."'".')"><i class="fas fa-edit"></i></a>
+                 <a class="btn btn-sm btn-danger" href="javascript:void(0)" title="Delete" onclick="deletes('."'".$value->id."','".$value->name."'".')"><i class="fas fa-trash-alt"></i></a>';
                 $row[] = $value->name;
                 $row[] = !empty($value->category) ? ucwords(strtolower($value->category)) : "";
                 $row[] = !empty($value->startdate) ? date("d-m-Y H:i:s", strtotime($value->startdate)) : "";
                 $row[] = !empty($value->enddate) ? date("d-m-Y H:i:s", strtotime($value->enddate)) : "";
                 $row[] = $value->quota;
+                // (!empty($detail->prices) ? number_format($detail->prices, 0, ",", ".") : "")
+                $row[] = (!empty($value->pendaftar) ? number_format($value->pendaftar, 0, ",", ".") : 0);
+                $row[] = (!empty($value->is_openeds) ? number_format($value->is_openeds, 0, ",", ".") : 0);
                 $row[] = $value->is_active == 1 ? "Yes" : "No";
-
-                //add html for action
-                $row[] = '<a class="btn btn-sm btn-success" href="/event/event-user-export/'.$value->id.'" target="_blank" title="User Per Acara"><i class="fas fa-file-excel"></i></a>
-                        <a class="btn btn-sm btn-info" href="javascript:void(0)" title="Detail" onclick="detail(\''.$value->id.'\')"><i class="fas fa-search"></i></a>
-                        <a class="btn btn-sm btn-primary" href="javascript:void(0)" title="Edit" onclick="edit('."'".$value->id."'".')"><i class="fas fa-edit"></i></a>
-                        <a class="btn btn-sm btn-danger" href="javascript:void(0)" title="Delete" onclick="deletes('."'".$value->id."','".$value->name."'".')"><i class="fas fa-trash-alt"></i></a>';
 
                 $data[] = $row;
                 $no++;
@@ -169,7 +176,7 @@ class EventController extends Controller
         $setting = Setting::where('setting_key', 'iwf_events')->first();
         $iwf_events = explode(';', $setting->setting_value);
 
-        $category = explode("/", "CONFERENCE/WORKSHOP/EVENT/QA/SEMINAR/OTHER");
+        $category = explode("/", "CONFERENCE/WORKSHOP/EVENT/QA/SEMINAR/MASTERCLASS/OTHER");
         $group = Group::orderBy('position')->get();
         $sponsor = Sponsor::orderBy('show_order')->get();
         $speaker = Speaker::get();
@@ -415,10 +422,10 @@ class EventController extends Controller
             $validation_text.= '<li>Kuota dibutuhkan</li>';
         }
 
-        if(empty($request->file_image_value)){
-            $validation = $validation && false;
-            $validation_text.= '<li>Banner dibutuhkan</li>';
-        }
+        // if(empty($request->file_image_value)){
+        //     $validation = $validation && false;
+        //     $validation_text.= '<li>Banner dibutuhkan</li>';
+        // }
 
 
         if($validation){
@@ -449,7 +456,7 @@ class EventController extends Controller
                 $event->startdate = !empty($request->startdate) ? $request->startdate.":00" : NULL;
                 $event->enddate = !empty($request->enddate) ? $request->enddate.":00" : NULL;
                 $event->location = $request->location;
-                $event->quota = $request->quota;
+                $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
                 $event->sponsors = !empty($request->sponsor) ? implode(",", $request->sponsor) : NULL;
                 $event->shortlink = str_replace(" ", "_",strtolower($request->name));
@@ -524,7 +531,7 @@ class EventController extends Controller
         $setting = Setting::where('setting_key', 'iwf_events')->first();
         $iwf_events = explode(';', $setting->setting_value);
 
-        $category = explode("/", "CONFERENCE/WORKSHOP/EVENT/QA/SEMINAR/OTHER");
+        $category = explode("/", "CONFERENCE/WORKSHOP/EVENT/QA/SEMINAR/MASTERCLASS/OTHER");
         $group = Group::orderBy('position')->get();
         $sponsor = Sponsor::orderBy('show_order')->get();
         $speaker = Speaker::get();
@@ -779,10 +786,10 @@ class EventController extends Controller
             $validation_text.= '<li>Kuota dibutuhkan</li>';
         }
 
-        if(empty($request->file_image_value)){
-            $validation = $validation && false;
-            $validation_text.= '<li>Banner dibutuhkan</li>';
-        }
+        // if(empty($request->file_image_value)){
+        //     $validation = $validation && false;
+        //     $validation_text.= '<li>Banner dibutuhkan</li>';
+        // }
 
 
         if($validation){
@@ -813,7 +820,7 @@ class EventController extends Controller
                 $event->startdate = !empty($request->startdate) ? $request->startdate.":00" : NULL;
                 $event->enddate = !empty($request->enddate) ? $request->enddate.":00" : NULL;
                 $event->location = $request->location;
-                $event->quota = $request->quota;
+                $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
                 $event->sponsors = !empty($request->sponsor) ? implode(",", $request->sponsor) : NULL;
                 $event->shortlink = str_replace(" ", "_",strtolower($request->name));
@@ -1208,6 +1215,7 @@ class EventController extends Controller
         $sheet->getColumnDimension('Q')->setAutoSize(true);
         $sheet->getColumnDimension('R')->setAutoSize(true);
         $sheet->getColumnDimension('S')->setAutoSize(true);
+        $sheet->getColumnDimension('T')->setAutoSize(true);
 
         $detail = Event::leftJoin('event_group AS eg', 'eg.event_id', 'events.id')
                 ->leftJoin('groups AS g', 'g.id', 'eg.group_id')
@@ -1277,45 +1285,46 @@ class EventController extends Controller
         $sheet->setCellValue('C13',' '.$data_speaker_text);
         $sheet->setCellValue('C14',' '.$detail->video_meeting_link);
 
-        $sheet->mergeCells('C1:S1');
-        $sheet->mergeCells('C2:S2');
-        $sheet->mergeCells('C3:S3');
-        $sheet->mergeCells('C4:S4');
-        $sheet->mergeCells('C5:S5');
-        $sheet->mergeCells('C6:S6');
-        $sheet->mergeCells('C7:S7');
-        $sheet->mergeCells('C8:S8');
-        $sheet->mergeCells('C9:S9');
-        $sheet->mergeCells('C10:S10');
-        $sheet->mergeCells('C11:S11');
-        $sheet->mergeCells('C12:S12');
-        $sheet->mergeCells('C13:S13');
-        $sheet->mergeCells('C14:S14');
+        $sheet->mergeCells('C1:T1');
+        $sheet->mergeCells('C2:T2');
+        $sheet->mergeCells('C3:T3');
+        $sheet->mergeCells('C4:T4');
+        $sheet->mergeCells('C5:T5');
+        $sheet->mergeCells('C6:T6');
+        $sheet->mergeCells('C7:T7');
+        $sheet->mergeCells('C8:T8');
+        $sheet->mergeCells('C9:T9');
+        $sheet->mergeCells('C10:T10');
+        $sheet->mergeCells('C11:T11');
+        $sheet->mergeCells('C12:T12');
+        $sheet->mergeCells('C13:T13');
+        $sheet->mergeCells('C14:T14');
 
         $row = $row_data = 16;
 
         $sheet->setCellValue('A'.$row, 'No');
-        $sheet->setCellValue('B'.$row, 'Nama');
-        $sheet->setCellValue('C'.$row, 'Email');
-        $sheet->setCellValue('D'.$row, 'Nomer Telepon');
-        $sheet->setCellValue('E'.$row, 'Tanggal Lahir');
-        $sheet->setCellValue('F'.$row, 'Pekerjaan Utama');
-        $sheet->setCellValue('G'.$row, 'Alamat');
-        $sheet->setCellValue('H'.$row, 'Provinsi');
-        $sheet->setCellValue('I'.$row, 'Kota / Kabupaten');
-        $sheet->setCellValue('J'.$row, 'Kode Pos');
-        $sheet->setCellValue('K'.$row, 'Kegiatan IWF');
-        $sheet->setCellValue('L'.$row, 'Facebook');
-        $sheet->setCellValue('M'.$row, 'Instagram');
-        $sheet->setCellValue('N'.$row, 'Linkedin');
-        $sheet->setCellValue('O'.$row, 'Peran');
-        $sheet->setCellValue('P'.$row, 'Diverifikasi?');
-        $sheet->setCellValue('Q'.$row, 'Diblok?');
-        $sheet->setCellValue('R'.$row, 'Kode Tiket');
-        $sheet->setCellValue('S'.$row, 'Tanggal Pemesanan');
-        $sheet->getStyle('A'.$row.':S'.$row)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('A'.$row.':S'.$row)->getFont()->setBold(true);
-        $sheet->getStyle('A'.$row.':S'.$row)->applyFromArray($styleHeader);
+        $sheet->setCellValue('B'.$row, 'Id Member');
+        $sheet->setCellValue('C'.$row, 'Nama');
+        $sheet->setCellValue('D'.$row, 'Email');
+        $sheet->setCellValue('E'.$row, 'Nomer Telepon');
+        $sheet->setCellValue('F'.$row, 'Tanggal Lahir');
+        $sheet->setCellValue('G'.$row, 'Pekerjaan Utama');
+        $sheet->setCellValue('H'.$row, 'Alamat');
+        $sheet->setCellValue('I'.$row, 'Provinsi');
+        $sheet->setCellValue('J'.$row, 'Kota / Kabupaten');
+        $sheet->setCellValue('K'.$row, 'Kode Pos');
+        $sheet->setCellValue('L'.$row, 'Kegiatan IWF');
+        $sheet->setCellValue('M'.$row, 'Facebook');
+        $sheet->setCellValue('N'.$row, 'Instagram');
+        $sheet->setCellValue('O'.$row, 'Linkedin');
+        $sheet->setCellValue('P'.$row, 'Peran');
+        $sheet->setCellValue('Q'.$row, 'Diverifikasi?');
+        $sheet->setCellValue('R'.$row, 'Diblok?');
+        $sheet->setCellValue('S'.$row, 'Kode Tiket');
+        $sheet->setCellValue('T'.$row, 'Tanggal Pemesanan');
+        $sheet->getStyle('A'.$row.':T'.$row)->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A'.$row.':T'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('A'.$row.':T'.$row)->applyFromArray($styleHeader);
 
         $data = User::select('users.*', 'provinces.name AS provinces_name', 'regions.name AS regions_name', 'em.*')
         ->leftJoin('provinces', 'provinces.id', '=', 'users.province_id')
@@ -1330,45 +1339,187 @@ class EventController extends Controller
         if(!empty($data)){
             foreach ($data as $key => $value) {
                 $sheet->setCellValue('A'.$row, $no)->getStyle('A'.$row)->getAlignment()->setHorizontal('center');
-                $sheet->setCellValue('B'.$row, $value->full_name);
-                $sheet->setCellValue('C'.$row, $value->email);
-                $sheet->setCellValue('D'.$row, $value->phone_number);
-                $sheet->setCellValue('E'.$row, $value->birthday);
+                $sheet->setCellValue('B'.$row, $value->number);
+                $sheet->setCellValue('C'.$row, $value->full_name);
+                $sheet->setCellValue('D'.$row, $value->email);
+                $sheet->setCellValue('E'.$row, $value->phone_number);
+                $sheet->setCellValue('F'.$row, $value->birthday);
                 if(!empty($value->occupation_company_name) && !empty($value->occupation_company_detail)){
                     $occupation_str = " (".$value->occupation_company_name.", ".$value->occupation_company_detail.")";
                 }else{
                     $occupation_str = "";
                 }
-                $sheet->setCellValue('F'.$row, $value->occupation.$occupation_str);
-                $sheet->setCellValue('G'.$row, $value->address);
+                $sheet->setCellValue('G'.$row, $value->occupation.$occupation_str);
+                $sheet->setCellValue('H'.$row, $value->address);
                 $value->provinces_name = str_replace("\n", "", $value->provinces_name);
                 $value->provinces_name = str_replace("\r", "", $value->provinces_name);
-                $sheet->setCellValue('H'.$row, !empty($value->provinces_name) ? ucwords(strtolower($value->provinces_name)) : "");
+                $sheet->setCellValue('I'.$row, !empty($value->provinces_name) ? ucwords(strtolower($value->provinces_name)) : "");
                 $value->regions_name = str_replace("\n", "", $value->regions_name);
                 $value->regions_name = str_replace("\r", "", $value->regions_name);
-                $sheet->setCellValue('I'.$row, !empty($value->regions_name) ? ucwords(strtolower($value->regions_name)) : "");
-                $sheet->setCellValue('J'.$row, $value->postal_code);
-                $sheet->setCellValue('K'.$row, " ".str_replace(';',', ',$value->previous_participations));
-                $sheet->setCellValue('L'.$row, $value->facebook);
-                $sheet->setCellValue('M'.$row, $value->instagram);
-                $sheet->setCellValue('N'.$row, $value->linkedin);
-                $sheet->setCellValue('O'.$row, !empty($value->roles) ? ucwords(strtolower($value->roles)) : "");
-                $sheet->setCellValue('P'.$row, !empty($value->account_verified_date) ? "Yes" : "No");
-                $sheet->setCellValue('Q'.$row, $value->is_blocked == 1 ? "Yes" : "No");
-                $sheet->setCellValue('R'.$row, $value->iwf_code);
-                $sheet->setCellValue('S'.$row, (!empty($value->registered_date) ? substr($value->registered_date, 0, -3) : ""));
+                $sheet->setCellValue('J'.$row, !empty($value->regions_name) ? ucwords(strtolower($value->regions_name)) : "");
+                $sheet->setCellValue('K'.$row, $value->postal_code);
+                $sheet->setCellValue('L'.$row, " ".str_replace(';',', ',$value->previous_participations));
+                $sheet->setCellValue('M'.$row, $value->facebook);
+                $sheet->setCellValue('N'.$row, $value->instagram);
+                $sheet->setCellValue('O'.$row, $value->linkedin);
+                $sheet->setCellValue('P'.$row, !empty($value->roles) ? ucwords(strtolower($value->roles)) : "");
+                $sheet->setCellValue('Q'.$row, !empty($value->account_verified_date) ? "Yes" : "No");
+                $sheet->setCellValue('R'.$row, $value->is_blocked == 1 ? "Yes" : "No");
+                $sheet->setCellValue('S'.$row, $value->iwf_code);
+                $sheet->setCellValue('T'.$row, (!empty($value->registered_date) ? substr($value->registered_date, 0, -3) : ""));
                 $no++;
                 $row++;
             }
         }
 
-        $sheet->getStyle('A'.$row_data.':S'.($row-1))->applyFromArray($styleBorder);
+        $sheet->getStyle('A'.$row_data.':T'.($row-1))->applyFromArray($styleBorder);
 
         $writer = new Xlsx($spreadsheet);
         $date_now = date('YmdHis');
         $writer->save('Event_User_'.$user_id.'.xlsx');
 
         return redirect('Event_User_'.$user_id.'.xlsx');
+
+    }
+
+    public function allEventUserExport(Request $request){
+
+        $user_id = auth()->user()->id;
+
+        @unlink(redirect('All_Event_User_'.$user_id.'.xlsx'));
+
+        $styleBorder = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $styleHeader = [
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
+                'rotation' => 90,
+                'startColor' => [
+                    'argb' => 'FFA0A0A0',
+                ],
+                'endColor' => [
+                    'argb' => 'FFFFFFFF',
+                ],
+            ],'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->createSheet();
+
+        // sheet 1
+        $spreadsheet->setActiveSheetIndex(0);
+        $sheet = $spreadsheet->getActiveSheet()->setTitle('Data Acara');
+
+        // style auto width column
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+        $sheet->getColumnDimension('D')->setAutoSize(true);
+        $sheet->getColumnDimension('E')->setAutoSize(true);
+        $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
+        $sheet->getColumnDimension('H')->setAutoSize(true);
+        $sheet->getColumnDimension('I')->setAutoSize(true);
+        $sheet->getColumnDimension('J')->setAutoSize(true);
+        $sheet->getColumnDimension('K')->setAutoSize(true);
+        $sheet->getColumnDimension('L')->setAutoSize(true);
+        $sheet->getColumnDimension('M')->setAutoSize(true);
+        $sheet->getColumnDimension('N')->setAutoSize(true);
+        $sheet->getColumnDimension('O')->setAutoSize(true);
+        $sheet->getColumnDimension('P')->setAutoSize(true);
+        $sheet->getColumnDimension('Q')->setAutoSize(true);
+        $sheet->getColumnDimension('R')->setAutoSize(true);
+        $sheet->getColumnDimension('S')->setAutoSize(true);
+        $sheet->getColumnDimension('T')->setAutoSize(true);
+
+        $row = 1;
+        $sheet->setCellValue('A'.$row, 'No');
+        $sheet->setCellValue('B'.$row, 'Id Member');
+        $sheet->setCellValue('C'.$row, 'Nama');
+        $sheet->setCellValue('D'.$row, 'Email');
+        $sheet->setCellValue('E'.$row, 'Nomer Telepon');
+        $sheet->setCellValue('F'.$row, 'Tanggal Lahir');
+        $sheet->setCellValue('G'.$row, 'Pekerjaan Utama');
+        $sheet->setCellValue('H'.$row, 'Alamat');
+        $sheet->setCellValue('I'.$row, 'Provinsi');
+        $sheet->setCellValue('J'.$row, 'Kota / Kabupaten');
+        $sheet->setCellValue('K'.$row, 'Kode Pos');
+        $sheet->setCellValue('L'.$row, 'Kegiatan IWF');
+        $sheet->setCellValue('M'.$row, 'Facebook');
+        $sheet->setCellValue('N'.$row, 'Instagram');
+        $sheet->setCellValue('O'.$row, 'Linkedin');
+        $sheet->setCellValue('P'.$row, 'Peran');
+        $sheet->setCellValue('Q'.$row, 'Diverifikasi?');
+        $sheet->setCellValue('R'.$row, 'Diblok?');
+        $sheet->setCellValue('S'.$row, 'Kode Tiket');
+        $sheet->setCellValue('T'.$row, 'Tanggal Pemesanan');
+        $sheet->getStyle('A'.$row.':T'.$row)->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A'.$row.':T'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('A'.$row.':T'.$row)->applyFromArray($styleHeader);
+
+        $data = User::select('users.*', 'provinces.name AS provinces_name', 'regions.name AS regions_name', 'em.*')
+        ->leftJoin('provinces', 'provinces.id', '=', 'users.province_id')
+        ->leftJoin('regions', 'regions.id', '=', 'users.region_id')
+        ->join('event_member AS em', 'em.user_id', 'users.id')
+        ->where('em.is_cancel', 0)
+        ->get();
+
+        $row++;
+        $row_data = $row;
+        $no = 1;
+        if(!empty($data)){
+            foreach ($data as $key => $value) {
+                $sheet->setCellValue('A'.$row, $no)->getStyle('A'.$row)->getAlignment()->setHorizontal('center');
+                $sheet->setCellValue('B'.$row, $value->number);
+                $sheet->setCellValue('C'.$row, $value->full_name);
+                $sheet->setCellValue('D'.$row, $value->email);
+                $sheet->setCellValue('E'.$row, $value->phone_number);
+                $sheet->setCellValue('F'.$row, $value->birthday);
+                if(!empty($value->occupation_company_name) && !empty($value->occupation_company_detail)){
+                    $occupation_str = " (".$value->occupation_company_name.", ".$value->occupation_company_detail.")";
+                }else{
+                    $occupation_str = "";
+                }
+                $sheet->setCellValue('G'.$row, $value->occupation.$occupation_str);
+                $sheet->setCellValue('H'.$row, $value->address);
+                $value->provinces_name = str_replace("\n", "", $value->provinces_name);
+                $value->provinces_name = str_replace("\r", "", $value->provinces_name);
+                $sheet->setCellValue('I'.$row, !empty($value->provinces_name) ? ucwords(strtolower($value->provinces_name)) : "");
+                $value->regions_name = str_replace("\n", "", $value->regions_name);
+                $value->regions_name = str_replace("\r", "", $value->regions_name);
+                $sheet->setCellValue('J'.$row, !empty($value->regions_name) ? ucwords(strtolower($value->regions_name)) : "");
+                $sheet->setCellValue('K'.$row, $value->postal_code);
+                $sheet->setCellValue('L'.$row, " ".str_replace(';',', ',$value->previous_participations));
+                $sheet->setCellValue('M'.$row, $value->facebook);
+                $sheet->setCellValue('N'.$row, $value->instagram);
+                $sheet->setCellValue('O'.$row, $value->linkedin);
+                $sheet->setCellValue('P'.$row, !empty($value->roles) ? ucwords(strtolower($value->roles)) : "");
+                $sheet->setCellValue('Q'.$row, !empty($value->account_verified_date) ? "Yes" : "No");
+                $sheet->setCellValue('R'.$row, $value->is_blocked == 1 ? "Yes" : "No");
+                $sheet->setCellValue('S'.$row, $value->iwf_code);
+                $sheet->setCellValue('T'.$row, (!empty($value->registered_date) ? substr($value->registered_date, 0, -3) : ""));
+                $no++;
+                $row++;
+            }
+        }
+
+        $sheet->getStyle('A'.$row_data.':T'.($row-1))->applyFromArray($styleBorder);
+
+        $writer = new Xlsx($spreadsheet);
+        $date_now = date('YmdHis');
+        $writer->save('All_Event_User_'.$user_id.'.xlsx');
+
+        return redirect('All_Event_User_'.$user_id.'.xlsx');
 
     }
 }

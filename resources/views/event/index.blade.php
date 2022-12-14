@@ -12,18 +12,21 @@
         <div class="card mb-4">
             <div class="table-responsive p-3">
                 <button class="btn btn-success mb-3" onclick="add()"><i class="fas fa-plus mr-2"></i> Add</button>
-                <a class="btn btn-success mb-3" href="/event/export" target="_blank"><i class="fas fa-file-excel"></i> Export</a>
+                <a class="btn btn-success mb-3" href="/event/export" target="_blank"><i class="fas fa-file-excel"></i> Semua Acara</a>
+                <a class="btn btn-success mb-3" href="/event/all-event-user-export" target="_blank"><i class="fas fa-file-excel"></i> Pengguna Semua Acara</a>
                 <table class="table align-items-center table-flush table-hover" id="dataTable">
                     <thead class="thead-light">
                         <tr>
                             <th>No</th>
+                            <th>Aksi</th>
                             <th>Nama</th>
                             <th>Kategori</th>
                             <th>Mulai</th>
                             <th>Selesai</th>
                             <th>Kuota</th>
+                            <th>Pendaftar</th>
+                            <th class="text-nowrap">Link Dibuka</th>
                             <th>Status</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -167,14 +170,15 @@ $(document).ready(function () {
             "type": "POST",
             "dataType": "json",
         },
-        "order": [[ 1, 'asc' ]], //Initial no order.
+        "order": [[ 0, 'desc' ]], //Initial no order.
 
         "columnDefs": [
             {
-                "targets": [ 0,7 ], //last column
+                "targets": [ 0,1 ], //last column
                 "orderable": false, //set not orderable
             },
-            { "targets": 7, "width": '140px' },
+            { "targets": 1, "width": '140px' },
+            { "targets": 1, "className": 'text-nowrap' },
             {"targets": 0, "width": '20px'}
         ],
     });

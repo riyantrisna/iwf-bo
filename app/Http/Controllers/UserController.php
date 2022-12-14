@@ -72,16 +72,15 @@ class UserController extends Controller
             foreach ($list as $key => $value) {
                 $row = array();
                 $row[] = $no;
+                //add html for action
+                $row[] = '<a class="btn btn-sm btn-info" href="javascript:void(0)" title="Detail" onclick="detail(\''.$value->id.'\')"><i class="fas fa-search"></i></a>
+                        <a class="btn btn-sm btn-primary" href="javascript:void(0)" title="Edit" onclick="edit('."'".$value->id."'".')"><i class="fas fa-edit"></i></a>
+                        <a class="btn btn-sm btn-danger" href="javascript:void(0)" title="Delete" onclick="deletes('."'".$value->id."','".$value->full_name."'".')"><i class="fas fa-trash-alt"></i></a>';
                 $row[] = $value->full_name;
                 $row[] = $value->email;
                 $row[] = $value->phone_number;
                 $row[] = $value->roles;
                 $row[] = $value->is_blocked == 1 ? "Yes" : "No";
-
-                //add html for action
-                $row[] = '<a class="btn btn-sm btn-info" href="javascript:void(0)" title="Detail" onclick="detail(\''.$value->id.'\')"><i class="fas fa-search"></i></a>
-                        <a class="btn btn-sm btn-primary" href="javascript:void(0)" title="Edit" onclick="edit('."'".$value->id."'".')"><i class="fas fa-edit"></i></a>
-                        <a class="btn btn-sm btn-danger" href="javascript:void(0)" title="Delete" onclick="deletes('."'".$value->id."','".$value->full_name."'".')"><i class="fas fa-trash-alt"></i></a>';
 
                 $data[] = $row;
                 $no++;
