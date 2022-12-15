@@ -459,7 +459,7 @@ class EventController extends Controller
                 $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
                 $event->sponsors = !empty($request->sponsor) ? implode(",", $request->sponsor) : NULL;
-                $event->shortlink = str_replace(" ", "_",strtolower($request->name));
+                $event->shortlink = preg_replace("/[^A-Za-z0-9 -]/", '', str_replace(" ", "-",strtolower($request->name)));
                 $event->video_meeting_link = $request->video_meeting_link;
                 $event->registered_information = $request->registered_information;
                 $event->banner_image = !empty($upload['file']) ? $upload['file'] : NULL;
@@ -823,7 +823,9 @@ class EventController extends Controller
                 $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
                 $event->sponsors = !empty($request->sponsor) ? implode(",", $request->sponsor) : NULL;
-                $event->shortlink = str_replace(" ", "_",strtolower($request->name));
+                if($event->shortlink == ""){
+                    $event->shortlink = preg_replace("/[^A-Za-z0-9 -]/", '', str_replace(" ", "-",strtolower($request->name)));
+                }
                 $event->video_meeting_link = $request->video_meeting_link;
                 $event->registered_information = $request->registered_information;
                 if(!empty($request->file_image_value)){
@@ -1441,6 +1443,7 @@ class EventController extends Controller
         $sheet->getColumnDimension('R')->setAutoSize(true);
         $sheet->getColumnDimension('S')->setAutoSize(true);
         $sheet->getColumnDimension('T')->setAutoSize(true);
+        $sheet->getColumnDimension('U')->setAutoSize(true);
 
         $row = 1;
         $sheet->setCellValue('A'.$row, 'No');
@@ -1463,14 +1466,16 @@ class EventController extends Controller
         $sheet->setCellValue('R'.$row, 'Diblok?');
         $sheet->setCellValue('S'.$row, 'Kode Tiket');
         $sheet->setCellValue('T'.$row, 'Tanggal Pemesanan');
-        $sheet->getStyle('A'.$row.':T'.$row)->getAlignment()->setHorizontal('center');
-        $sheet->getStyle('A'.$row.':T'.$row)->getFont()->setBold(true);
-        $sheet->getStyle('A'.$row.':T'.$row)->applyFromArray($styleHeader);
+        $sheet->setCellValue('U'.$row, 'Acara');
+        $sheet->getStyle('A'.$row.':U'.$row)->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A'.$row.':U'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('A'.$row.':U'.$row)->applyFromArray($styleHeader);
 
-        $data = User::select('users.*', 'provinces.name AS provinces_name', 'regions.name AS regions_name', 'em.*')
+        $data = User::select('users.*', 'provinces.name AS provinces_name', 'regions.name AS regions_name', 'em.*', 'e.name AS event_name')
         ->leftJoin('provinces', 'provinces.id', '=', 'users.province_id')
         ->leftJoin('regions', 'regions.id', '=', 'users.region_id')
         ->join('event_member AS em', 'em.user_id', 'users.id')
+        ->leftJoin('events AS e', 'e.id', 'em.event_id')
         ->where('em.is_cancel', 0)
         ->get();
 
@@ -1508,12 +1513,13 @@ class EventController extends Controller
                 $sheet->setCellValue('R'.$row, $value->is_blocked == 1 ? "Yes" : "No");
                 $sheet->setCellValue('S'.$row, $value->iwf_code);
                 $sheet->setCellValue('T'.$row, (!empty($value->registered_date) ? substr($value->registered_date, 0, -3) : ""));
+                $sheet->setCellValue('U'.$row, $value->event_name);
                 $no++;
                 $row++;
             }
         }
 
-        $sheet->getStyle('A'.$row_data.':T'.($row-1))->applyFromArray($styleBorder);
+        $sheet->getStyle('A'.$row_data.':U'.($row-1))->applyFromArray($styleBorder);
 
         $writer = new Xlsx($spreadsheet);
         $date_now = date('YmdHis');
