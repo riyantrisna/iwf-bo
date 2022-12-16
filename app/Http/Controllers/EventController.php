@@ -277,6 +277,10 @@ class EventController extends Controller
         $html.=     '<input type="text" id="enddate" name="enddate" class="form-control">';
         $html.= '</div>';
         $html.= '<div class="form-group">';
+        $html.=     '<label for="last_register">Pendaftaran Terakhir *</label>';
+        $html.=     '<input type="text" id="last_register" name="last_register" class="form-control">';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
         $html.=     '<label for="location">Lokasi *</label>';
         $html.=     '<input type="text" id="location" name="location" class="form-control">';
         $html.= '</div>';
@@ -412,6 +416,11 @@ class EventController extends Controller
             $validation_text.= '<li>Tanggal Selesai dibutuhkan</li>';
         }
 
+        if(empty($request->last_register)){
+            $validation = $validation && false;
+            $validation_text.= '<li>Pendaftaran Terakhir dibutuhkan</li>';
+        }
+
         if(empty($request->location)){
             $validation = $validation && false;
             $validation_text.= '<li>Lokasi dibutuhkan</li>';
@@ -455,6 +464,7 @@ class EventController extends Controller
                 $event->is_active = $request->is_active;
                 $event->startdate = !empty($request->startdate) ? $request->startdate.":00" : NULL;
                 $event->enddate = !empty($request->enddate) ? $request->enddate.":00" : NULL;
+                $event->last_register = !empty($request->last_register) ? $request->last_register.":00" : NULL;
                 $event->location = $request->location;
                 $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
@@ -633,6 +643,10 @@ class EventController extends Controller
         $html.=     '<input type="text" id="enddate" name="enddate" class="form-control"  value="'.(!empty($detail->enddate) ? substr($detail->enddate, 0, -3) : "").'">';
         $html.= '</div>';
         $html.= '<div class="form-group">';
+        $html.=     '<label for="last_register">Tanggal Selesai *</label>';
+        $html.=     '<input type="text" id="last_register" name="last_register" class="form-control"  value="'.(!empty($detail->last_register) ? substr($detail->last_register, 0, -3) : "").'">';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
         $html.=     '<label for="location">Lokasi *</label>';
         $html.=     '<input type="text" id="location" name="location" class="form-control" value="'.$detail->location.'">';
         $html.= '</div>';
@@ -776,6 +790,11 @@ class EventController extends Controller
             $validation_text.= '<li>Tanggal Selesai dibutuhkan</li>';
         }
 
+        if(empty($request->enddate)){
+            $validation = $validation && false;
+            $validation_text.= '<li>Pendaftaran Terakhir dibutuhkan</li>';
+        }
+
         if(empty($request->location)){
             $validation = $validation && false;
             $validation_text.= '<li>Lokasi dibutuhkan</li>';
@@ -819,6 +838,7 @@ class EventController extends Controller
                 $event->is_active = $request->is_active;
                 $event->startdate = !empty($request->startdate) ? $request->startdate.":00" : NULL;
                 $event->enddate = !empty($request->enddate) ? $request->enddate.":00" : NULL;
+                $event->last_register = !empty($request->last_register) ? $request->last_register.":00" : NULL;
                 $event->location = $request->location;
                 $event->quota = !empty($request->quota) ? str_replace(".","",$request->quota) : NULL;
                 $event->prices = !empty($request->prices) ? str_replace(".","",$request->prices) : NULL;
@@ -925,55 +945,59 @@ class EventController extends Controller
         }
 
         $html = '<div class="form-group">';
-        $html.=     '<label for="name">Nama *</label>';
+        $html.=     '<label for="name">Nama</label>';
         $html.=     '<div id="name" class="detail-value">'.$detail->name.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="category">Kategori *</label>';
+        $html.=     '<label for="category">Kategori</label>';
         $html.=     '<div id="category" class="detail-value">'.(ucwords(strtolower($detail->category))).'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="period_code">Periode *</label>';
+        $html.=     '<label for="period_code">Periode</label>';
         $html.=     '<div id="period_code" class="detail-value">'.$detail->period_code.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="event_group">Kelompok *</label>';
+        $html.=     '<label for="event_group">Kelompok</label>';
         $html.=     '<div id="event_group" class="detail-value">'.$detail->group_name.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="mode">Mode *</label>';
+        $html.=     '<label for="mode">Mode</label>';
         $html.=     '<div id="mode" class="detail-value">'.(ucwords(strtolower($detail->mode))).'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="highlight">Highlight *</label>';
+        $html.=     '<label for="highlight">Highlight</label>';
         $html.=     '<div id="highlight" class="detail-value">'.$detail->highlight.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="description">Deskipsi *</label>';
+        $html.=     '<label for="description">Deskipsi</label>';
         $html.=     '<div id="description" class="detail-value">'.$detail->description.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="is_active">Status *</label>';
+        $html.=     '<label for="is_active">Status</label>';
         $html.=     '<div id="is_active" class="detail-value">'.($detail->is_active == "1" ? "Aktif" : "Tidak Aktif").'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="startdate">Tanggal Mulai *</label>';
+        $html.=     '<label for="startdate">Tanggal Mulai</label>';
         $html.=     '<div id="startdate" class="detail-value">'.(!empty($detail->startdate) ? substr($detail->startdate, 0, -3) : "").'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="enddate">Tanggal Selesai *</label>';
+        $html.=     '<label for="enddate">Tanggal Selesai</label>';
         $html.=     '<div id="enddate" class="detail-value">'.(!empty($detail->enddate) ? substr($detail->enddate, 0, -3) : "").'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="location">Lokasi *</label>';
+        $html.=     '<label for="last_register">Pendaftaran Terakhir</label>';
+        $html.=     '<div id="last_register" class="detail-value">'.(!empty($detail->last_register) ? substr($detail->last_register, 0, -3) : "").'</div>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
+        $html.=     '<label for="location">Lokasi</label>';
         $html.=     '<div id="location" class="detail-value">'.$detail->location.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="quota">Kuota *</label>';
+        $html.=     '<label for="quota">Kuota</label>';
         $html.=     '<div id="quota" class="detail-value">'.(!empty($detail->quota) ? number_format($detail->quota, 0, ",", ".") : "").'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="prices">Harga <i>(*kosongkan jika gratis)</i></label>';
+        $html.=     '<label for="prices">Harga</label>';
         $html.=     '<div id="quota" class="detail-value">'.(!empty($detail->prices) ? number_format($detail->prices, 0, ",", ".") : "").'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';

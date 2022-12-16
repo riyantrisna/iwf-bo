@@ -207,7 +207,7 @@ function add()
         {
             if(xhr.status == '200'){
                 await $('#form_user').html(data.html);
-                await $("#startdate,#enddate").datetimepicker({
+                await $("#startdate,#enddate,#last_register").datetimepicker({
                     format:'Y-m-d H:i'
                 });
                 await $('.textarea').summernote({
@@ -255,7 +255,7 @@ function edit(id)
         {
             if(xhr.status == '200'){
                 await $('#form_user').html(data.html);
-                await $("#startdate,#enddate").datetimepicker({
+                await $("#startdate,#enddate,#last_register").datetimepicker({
                     format:'Y-m-d H:i'
                 });
                 await $('.textarea').summernote({
