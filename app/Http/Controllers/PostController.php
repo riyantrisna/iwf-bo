@@ -41,6 +41,7 @@ class PostController extends Controller
             $query = $list->where(function($q) use($keyword) {
                 $q->where('posts.title', 'LIKE', $keyword)
                 ->orWhere('posts.tags', 'LIKE', $keyword)
+                ->orWhere('posts.content', 'LIKE', $keyword)
                 ->orWhere('posts.created_date', 'LIKE', $keyword)
                 ;
             });
@@ -151,8 +152,27 @@ class PostController extends Controller
         $html.=     '<input type="text" id="tags" name="tags" class="form-control">';
         $html.= '</div>';
         $html.= '<div class="form-group">';
+        $html.=     '<label for="excerpt">Kutipan *</label>';
+        $html.=     '<textarea id="excerpt" name="excerpt" class="form-control textarea"></textarea>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
         $html.=     '<label for="content">Konten *</label>';
         $html.=     '<textarea id="content" name="content" class="form-control textarea"></textarea>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
+        $html.=     '<label for="is_active">Status *</label>';
+        $html.=     '<div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_active" id="is_active1" value="1" checked>
+                        <label class="form-check-label" for="is_active1">
+                            Aktif
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_active" id="is_active2" value="0" >
+                        <label class="form-check-label" for="is_active2">
+                            Tidak Aktif
+                        </label>
+                    </div>';
         $html.= '</div>';
         $html.= '<div class="form-group">
                     <label for="file_image">Banner</label>
@@ -201,9 +221,19 @@ class PostController extends Controller
             }
         }
 
+        if(empty($request->excerpt)){
+            $validation = $validation && false;
+            $validation_text.= '<li>Kutipan dibutuhkan</li>';
+        }
+
         if(empty($request->content)){
             $validation = $validation && false;
             $validation_text.= '<li>Konten dibutuhkan</li>';
+        }
+
+        if(!isset($request->is_active) && $request->is_active == ''){
+            $validation = $validation && false;
+            $validation_text.= '<li>Status dibutuhkan</li>';
         }
 
         if($validation){
@@ -225,11 +255,13 @@ class PostController extends Controller
                 $post = new Post;
 
                 $post->title = $request->title;
+                $post->excerpt = $request->excerpt;
                 $post->content = $request->content;
                 $post->slug_url = preg_replace("/[^A-Za-z0-9 -]/", '', str_replace(" ", "-",strtolower($request->title)));
                 $post->tags = $request->tags;
                 $post->category = "PAGE";
                 $post->banner_image = !empty($upload['file']) ? $upload['file'] : NULL;
+                $post->is_active = $request->is_active;
                 $post->created_by = $user_id;
                 $post->created_date = $date;
                 $response = $post->save();
@@ -284,8 +316,27 @@ class PostController extends Controller
         $html.=     '<input type="text" id="tags" name="tags" class="form-control" value="'.$detail->tags.'">';
         $html.= '</div>';
         $html.= '<div class="form-group">';
+        $html.=     '<label for="excerpt">Kutipan *</label>';
+        $html.=     '<textarea id="excerpt" name="excerpt" class="form-control textarea">'.$detail->excerpt.'</textarea>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
         $html.=     '<label for="content">Konten *</label>';
         $html.=     '<textarea id="content" name="content" class="form-control textarea">'.$detail->content.'</textarea>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
+        $html.=     '<label for="is_active">Status *</label>';
+        $html.=     '<div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_active" id="is_active1" value="1" '.($detail->is_active == "1" ? "checked" : "").'>
+                        <label class="form-check-label" for="is_active1">
+                            Aktif
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_active" id="is_active2" value="0" '.($detail->is_active == "0" ? "checked" : "").'>
+                        <label class="form-check-label" for="is_active2">
+                            Tidak Aktif
+                        </label>
+                    </div>';
         $html.= '</div>';
         $path = env("APP_WEB_URL")."upload/post/";
         if(!empty($detail->banner_image)){
@@ -342,9 +393,19 @@ class PostController extends Controller
             }
         }
 
+        if(empty($request->excerpt)){
+            $validation = $validation && false;
+            $validation_text.= '<li>Kutipan dibutuhkan</li>';
+        }
+
         if(empty($request->content)){
             $validation = $validation && false;
             $validation_text.= '<li>Konten dibutuhkan</li>';
+        }
+
+        if(!isset($request->is_active) && $request->is_active == ''){
+            $validation = $validation && false;
+            $validation_text.= '<li>Status dibutuhkan</li>';
         }
 
         if($validation){
@@ -366,6 +427,7 @@ class PostController extends Controller
                 $post = Post::where('id', $request->id)->first();
 
                 $post->title = $request->title;
+                $post->excerpt = $request->excerpt;
                 $post->content = $request->content;
                 if($post->slug_url == ""){
                     $post->slug_url = preg_replace("/[^A-Za-z0-9 -]/", '', str_replace(" ", "-",strtolower($request->title)));
@@ -375,6 +437,7 @@ class PostController extends Controller
                 if(!empty($request->file_image_value)){
                     $post->banner_image = !empty($upload['file']) ? $upload['file'] : NULL;
                 }
+                $post->is_active = $request->is_active;
                 $post->updated_by = $user_id;
                 $post->updated_date = $date;
                 $response = $post->save();
@@ -433,8 +496,16 @@ class PostController extends Controller
         $html.=     '<div id="tags" class="detail-value">'.$detail->tags.'</div>';
         $html.= '</div>';
         $html.= '<div class="form-group">';
+        $html.=     '<label for="excerpt">Kutipan</label>';
+        $html.=     '<div id="excerpt" class="detail-value">'.$detail->excerpt.'</div>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
         $html.=     '<label for="content">Konten</label>';
         $html.=     '<div id="content" class="detail-value">'.$detail->content.'</div>';
+        $html.= '</div>';
+        $html.= '<div class="form-group">';
+        $html.=     '<label for="is_active">Status</label>';
+        $html.=     '<div id="is_active" class="detail-value">'.($detail->is_active == "1" ? "Aktif" : "Tidak Aktif").'</div>';
         $html.= '</div>';
         $path = env("APP_WEB_URL")."upload/post/";
         $html.= '<div class="form-group">
