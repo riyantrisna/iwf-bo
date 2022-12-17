@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RegionsController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,17 @@ Route::middleware(['admin'])->group(function () {
         Route::get('/export', [EventController::class, 'eventExport']);
         Route::get('/event-user-export/{id}', [EventController::class, 'eventUserExport']);
         Route::get('/all-event-user-export', [EventController::class, 'allEventUserExport']);
+    });
+
+    Route::prefix('post')->group(function(){
+        Route::get('/', [PostController::class, 'index']);
+        Route::post('/data', [PostController::class, 'data']);
+        Route::get('/add-view', [PostController::class, 'addView']);
+        Route::post('/add', [PostController::class, 'add']);
+        Route::get('/edit-view/{id}', [PostController::class, 'editView']);
+        Route::post('/edit', [PostController::class, 'edit']);
+        Route::get('/detail/{id}', [PostController::class, 'detail']);
+        Route::get('/delete/{id}', [PostController::class, 'delete']);
     });
 });
 

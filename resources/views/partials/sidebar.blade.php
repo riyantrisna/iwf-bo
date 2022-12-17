@@ -29,9 +29,9 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/pages">
+        <a class="nav-link" href="/post">
             <i class="fas fa-fw fa-window-restore"></i>
-            <span>Page</span>
+            <span>Artikel</span>
         </a>
     </li>
     <li class="nav-item">

@@ -60,7 +60,7 @@ class EventController extends Controller
         if(!empty($keyword)){
             $keyword = '%'.$keyword .'%';
             $query = $list->where(function($q) use($keyword) {
-                $q->where('events.ame', 'LIKE', $keyword)
+                $q->where('events.name', 'LIKE', $keyword)
                 ->orWhere('events.category', 'LIKE', $keyword)
                 ->orWhere('events.startdate', 'LIKE', $keyword)
                 ->orWhere('events.enddate', 'LIKE', $keyword)
@@ -325,7 +325,7 @@ class EventController extends Controller
         $html.=     '<textarea id="registered_information" name="registered_information" class="form-control textarea"></textarea>';
         $html.= '</div>';
         $html.= '<div class="form-group">
-                    <label for="file_image">Banner *</label>
+                    <label for="file_image">Banner</label>
                     <br>
                     <div class="row">
                         <div class="col" style="text-align: center;">
@@ -699,7 +699,7 @@ class EventController extends Controller
             $base_64_images = '';
         }
         $html.= '<div class="form-group">
-                    <label for="file_image">Banner *</label>
+                    <label for="file_image">Banner</label>
                     <br>
                     <div class="row">
                         <div class="col" style="text-align: center; height: 245px;">
