@@ -3,7 +3,7 @@
 <div class="d-sm-flex align-items-center justify-content-between">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Acara</li>
+        <li class="breadcrumb-item active" aria-current="page">Setting</li>
     </ol>
 </div>
 <div class="row">
@@ -11,22 +11,13 @@
     <div class="col-lg-12">
         <div class="card mb-4">
             <div class="table-responsive p-3">
-                <button class="btn btn-success mb-3" onclick="add()"><i class="fas fa-plus mr-2"></i> Add</button>
-                <a class="btn btn-success mb-3" href="/event/export" target="_blank"><i class="fas fa-file-excel"></i> Semua Acara</a>
-                <a class="btn btn-success mb-3" href="/event/all-event-user-export" target="_blank"><i class="fas fa-file-excel"></i> Pengguna Semua Acara</a>
                 <table class="table align-items-center table-flush table-hover" id="dataTable">
                     <thead class="thead-light">
                         <tr>
                             <th>No</th>
                             <th>Aksi</th>
-                            <th>Nama</th>
-                            <th>Kategori</th>
-                            <th>Mulai</th>
-                            <th>Selesai</th>
-                            <th>Kuota</th>
-                            <th>Pendaftar</th>
-                            <th class="text-nowrap">Link Dibuka</th>
-                            <th>Status</th>
+                            <th>Penanda</th>
+                            <th>Nilai</th>
                         </tr>
                     </thead>
                 </table>
@@ -163,18 +154,18 @@ $(document).ready(function () {
         "processing": true,
         "serverSide": true,
         "ajax": {
-            "url": "{{ url('/event/data') }}",
+            "url": "{{ url('/setting/data') }}",
             "data": {
                 "_token": "{{ csrf_token() }}"
             },
             "type": "POST",
             "dataType": "json",
         },
-        "order": [[ 4, 'desc' ]], //Initial no order.
+        "order": [[ 2, 'asc' ]], //Initial no order.
 
         "columnDefs": [
             {
-                "targets": [ 0,1 ], //last column
+                "targets": [ 0,1,3 ], //last column
                 "orderable": false, //set not orderable
             },
             { "targets": 1, "width": '140px' },
@@ -200,35 +191,13 @@ function add()
     $('#title_form').text('Add {{ $title }}'); // Set Title to Bootstrap modal title
 
     $.ajax({
-        url : "{{ url('/event/add-view') }}",
+        url : "{{ url('/setting/add-view') }}",
         type: "GET",
         dataType: "JSON",
         success: async function(data, textStatus, xhr)
         {
             if(xhr.status == '200'){
                 await $('#form_user').html(data.html);
-                await $("#startdate,#enddate,#last_register").datetimepicker({
-                    format:'Y-m-d H:i'
-                });
-                await $('.textarea').summernote({
-                    height: 150,
-                    toolbar: [
-                        [ 'style', [ 'style' ] ],
-                        [ 'font', [ 'bold', 'italic', 'underline', 'strikethrough', 'clear'] ],
-                        [ 'fontname', [ 'fontname' ] ],
-                        [ 'fontsize', [ 'fontsize' ] ],
-                        [ 'color', [ 'color' ] ],
-                        [ 'para', [ 'ol', 'ul', 'paragraph', 'height' ] ],
-                        [ 'table', [ 'table' ] ],
-                        [ 'view', [ 'fullscreen', 'codeview' ] ]
-                    ]
-                });
-                $(".curr").mask('00.000.000.000.000.000.000', {reverse: true});
-                $('#sponsor, #speaker').select2();
-                //image
-                await $('#remove_file').hide();
-                await $('#selector_file').show();
-                await $('#file_image_show').hide();
             }else{
                 toastr.error(xhr.statusText);
             }
@@ -248,35 +217,13 @@ function edit(id)
     $('#title_form').text('Edit {{ $title }}'); // Set Title to Bootstrap modal title
 
     $.ajax({
-        url : "{{ url('/event/edit-view') }}/" + id,
+        url : "{{ url('/setting/edit-view') }}/" + id,
         type: "GET",
         dataType: "JSON",
         success: async function(data, textStatus, xhr)
         {
             if(xhr.status == '200'){
                 await $('#form_user').html(data.html);
-                await $("#startdate,#enddate,#last_register").datetimepicker({
-                    format:'Y-m-d H:i'
-                });
-                await $('.textarea').summernote({
-                    height: 150,
-                    toolbar: [
-                        [ 'style', [ 'style' ] ],
-                        [ 'font', [ 'bold', 'italic', 'underline', 'strikethrough', 'clear'] ],
-                        [ 'fontname', [ 'fontname' ] ],
-                        [ 'fontsize', [ 'fontsize' ] ],
-                        [ 'color', [ 'color' ] ],
-                        [ 'para', [ 'ol', 'ul', 'paragraph', 'height' ] ],
-                        [ 'table', [ 'table' ] ],
-                        [ 'view', [ 'fullscreen', 'codeview' ] ]
-                    ]
-                });
-                $(".curr").mask('00.000.000.000.000.000.000', {reverse: true});
-                $('#sponsor, #speaker').select2();
-                //image
-                await $('#remove_file').hide();
-                await $('#selector_file').show();
-                await $('#file_image_show').hide();
             }else{
                 toastr.error(xhr.statusText);
             }
@@ -294,9 +241,9 @@ function save()
     var url;
 
     if(save_method == 'add') {
-        url = "{{ url('/event/add') }}";
+        url = "{{ url('/setting/add') }}";
     } else {
-        url = "{{ url('/event/edit') }}";
+        url = "{{ url('/setting/edit') }}";
     }
 
     var data_form = $('#form_user').serialize()+ "&" + $.param({_token:"{{ csrf_token() }}"});
@@ -338,7 +285,7 @@ function detail(id)
     $('#form_user').html("");
 
     $.ajax({
-        url : "{{ url('/event/detail') }}/" + id,
+        url : "{{ url('/setting/detail') }}/" + id,
         type: "GET",
         dataType: "JSON",
         success: async function(data, textStatus, xhr)
@@ -369,7 +316,7 @@ function process_delete(id)
     $('#btnHapus').attr('disabled',true); //set button disable
 
     $.ajax({
-        url : "{{ url('/event/delete') }}/" + id,
+        url : "{{ url('/setting/delete') }}/" + id,
         type: "GET",
         dataType: "JSON",
         success: function(data, textStatus, xhr)

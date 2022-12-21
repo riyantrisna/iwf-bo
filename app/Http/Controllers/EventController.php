@@ -643,7 +643,7 @@ class EventController extends Controller
         $html.=     '<input type="text" id="enddate" name="enddate" class="form-control"  value="'.(!empty($detail->enddate) ? substr($detail->enddate, 0, -3) : "").'">';
         $html.= '</div>';
         $html.= '<div class="form-group">';
-        $html.=     '<label for="last_register">Tanggal Selesai *</label>';
+        $html.=     '<label for="last_register">Pendaftaran Terakhir *</label>';
         $html.=     '<input type="text" id="last_register" name="last_register" class="form-control"  value="'.(!empty($detail->last_register) ? substr($detail->last_register, 0, -3) : "").'">';
         $html.= '</div>';
         $html.= '<div class="form-group">';

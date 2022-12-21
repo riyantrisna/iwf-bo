@@ -17,15 +17,39 @@
         Main Menu
     </div>
     <li class="nav-item">
+        <a class="nav-link" href="/landingpage">
+            <i class="fas fa-fw fa-th"></i>
+            <span>Halaman Utama</span>
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link" href="/user">
             <i class="fas fa-fw fa-user"></i>
-            <span>User</span>
+            <span>Pengguna</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/speaker">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Pembicara</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/sponsor">
+            <i class="fas fa-fw fa-bullhorn"></i>
+            <span>Sponsor</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/event-group">
+            <i class="fas fa-fw fa-database"></i>
+            <span>Kelompok Acara</span>
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="/event">
             <i class="fas fa-fw fa-calendar"></i>
-            <span>Event</span>
+            <span>Acara</span>
         </a>
     </li>
     <li class="nav-item">
@@ -34,10 +58,11 @@
             <span>Artikel</span>
         </a>
     </li>
+    </li>
     <li class="nav-item">
-        <a class="nav-link" href="landingpage">
-            <i class="fas fa-fw fa-th"></i>
-            <span>Landing Page</span>
+        <a class="nav-link" href="/setting">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Setting</span>
         </a>
     </li>
 </ul>
